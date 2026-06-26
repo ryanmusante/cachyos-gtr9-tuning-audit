@@ -5,12 +5,19 @@ All notable changes to the ry-install deep-research prompt.
 Format follows the kernel.org convention: newest first, grouped by change class.
 The prompt version tracks the `ry-install.fish` version it audits.
 
-## [v7.70.1] - 2026-06-25
+## [v7.70.1] - 2026-06-26
 
 Target script: `ry-install.fish` v7.70.1.
 
 ### Changed
 
+- Editorial pass on the prompt: removed conversational filler and telegraphic
+  asides, normalized section headers and list phrasing to professional register,
+  and expanded cramped parentheticals into readable clauses. No technical content
+  changed — all 11 counts, every config value-string, the VERIFY block, the
+  security-delta ordering, all `§1`–`§12` investigation items, every source list,
+  and both r8169 commit hashes are byte-for-byte preserved in meaning. Verified by
+  token-presence check against the prior revision.
 - Pinned all version-floor language and inline deltas to v7.70.1 as the script
   under audit; source-of-truth order set to script > README > CHANGELOG.
 
