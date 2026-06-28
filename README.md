@@ -1,4 +1,4 @@
-# ry-install Deep-Research Prompt
+# cachyos-tuning-audit
 
 Version-pinned deep-research prompt for auditing `ry-install.fish` against current
 upstream sources. Each release of the prompt tracks one exact script version; the
