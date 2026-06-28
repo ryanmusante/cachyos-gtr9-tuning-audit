@@ -1,4 +1,4 @@
-# cachyos-tuning-audit
+# ry-install Deep-Research Prompt
 
 Version-pinned deep-research prompt for auditing `ry-install.fish` against current
 upstream sources. Each release of the prompt tracks one exact script version; the
@@ -56,9 +56,13 @@ From `_ir_validate_counts` (all 19 hard-asserted):
 ║ NTSYNC autoload conf║ 0     ║  (de-managed; assert-only)
 ```
 
-Hard floors: **KERNEL_MIN 6.18** (preflight hard-fail) · CPU gate `Ryzen AI Max` ·
-soft Mesa < 26.0 warn · linux-firmware advisory (hard-warn `20251125*` MES blob,
-soft-warn < `20260110`; non-fatal).
+Hard floors: **KERNEL_MIN 6.18** (preflight hard-fail) — anchored to **gfx1151
+GPU/ROCm stability** (avoid < 6.18.4; 6.18.6+ recommended), NOT networking (the RTL8127
+r8169 commits land earlier: support `f24f7b2f3af9` in 6.16, suspend fix `ae1737e7339b`
+in 6.18 / 6.17-stable, so the NIC floor is 6.17) · CPU gate `Ryzen AI Max` ·
+soft Mesa < 26.0 warn · linux-firmware advisory (hard-warn `20251125*` = bad GC 11.5.1
+MES 0x83; soft-warn < `20260110` = the **revert** to stable MES 0x80; known-good
+20251111 or 20260110+; non-fatal).
 
 ## What changed since v7.75.1
 
@@ -78,10 +82,13 @@ reviewer must re-evaluate with fresh evidence. Headline items:
   opt-out, mainline ≥ 6.14. The prior "ntsync is now MANAGED (3 autoload confs)" framing
   is retired.
 - **MangoHud `cpu_temp` commented out** (v7.76.1) — ships as `# cpu_temp` pending
-  per-host hwmon resolution; re-enable is `cpu_custom_temp_sensor=k10temp`. 17 active
-  directives.
-- **New linux-firmware preflight advisory** (v7.76.0) — hard-warn on a `20251125*` MES
-  blob (gfx1151 GCVM_L2 hang), soft-warn below `20260110`.
+  per-host hwmon resolution; re-enable is **`cpu_temp_sensor=k10temp`** (Round 2:
+  corrected from `cpu_custom_temp_sensor`; `k10temp`/Tctl is the Zen 5 sensor; open bug
+  #1794 zeroes `cpu_power` when `cpu_temp` is on). 17 active directives.
+- **New linux-firmware preflight advisory** (v7.76.0) — hard-warn on `20251125*`
+  (regressed GC 11.5.1 MES 0x83, commit `9643cbf2…`), soft-warn below `20260110` (the
+  **revert** to MES 0x80, `c092c7487e…` — NOT a new fix). Known-good: 20251111 or
+  20260110+; latest 20260624.
 - **New RTC write-back** (`_ry_rtc_writeback`, v7.74.1) — `hwclock --systohc --utc`
   after NTP sync so a skewed RTC stops poisoning timer persistence stamps.
 - **Governor/EPP pairing is LIVE** (`powersave` + `balance_performance`, v7.75.1) —
@@ -104,6 +111,18 @@ reviewer must re-evaluate with fresh evidence. Headline items:
   (negative level — ESP-budget vs boot-time), an EPP=performance gaming opt-in, the
   un-deployed scheduler ATTRs, and the GameMode-integration gap (no `gamemoderun` /
   `gamemode.ini`).
+- **Round 2 live-source validation folded in (2026-06-28).** Open questions are now
+  answered inline (**RESOLVED (Round 2)**) against primary/authoritative sources.
+  Corrections: 6.18 floor re-anchored to gfx1151 stability (NIC floor is 6.17 — r8169
+  commits `f24f7b2f3af9`/6.16 and `ae1737e7339b`/6.18+6.17-stable PRIMARY-VERIFIED);
+  linux-firmware soft-warn is a **revert** not a fix (20251125 bad MES 0x83 `9643cbf2…`
+  → 20260110 revert to 0x80 `c092c7487e…`); MangoHud key is `cpu_temp_sensor`
+  (open #1794 zeroes `cpu_power` on Zen 5); **amd_iommu=off does not break ROCm** on
+  gfx1151 (`IOMMU Support: None`) — no compute escalation; all §13 knobs resolved
+  (6 KEEP-omitted incl. `preempt=full` redundant + GameMode redundant; 2 UNCERTAIN:
+  RADV `nggc`, EPP=performance gaming). Still open (UNCERTAIN): the exact firmware
+  release re-landing the corrected GC 11.5.1 blob, sdboot-manage maintenance cadence,
+  ACP70 internal-mic ASoC driver (confirmed still absent upstream).
 
 ## Structure
 

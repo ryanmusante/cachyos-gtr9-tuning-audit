@@ -14,7 +14,68 @@ enumerates every delta the reviewer must re-evaluate. This revision also adds a
 deeper-pass gaming-first investigation layer (§13) and value-anchors several previously
 generic items.
 
-### Added (deeper pass — §13 candidate enhancements, gaming-first)
+### Validated (Round 2 live-source pass — 2026-06-28; prompt-only, script unchanged at v7.77.1)
+
+Two rounds of current-upstream validation folded into the prompt. Open questions now
+carry the verified answer inline (marked **RESOLVED (Round 2)**); no script change, so
+the prompt version stays v7.77.1 (this changelog tracks the script version it audits).
+
+#### Corrected (factual anchors that were wrong)
+
+- **Kernel floor rationale** — `KERNEL_MIN=6.18` re-anchored from "RTL8127 networking" to
+  **gfx1151 GPU/ROCm stability** (avoid < 6.18.4; 6.18.6+ recommended). The two r8169
+  commits are PRIMARY-VERIFIED and land earlier: `f24f7b2f3af9` ("r8169: add support for
+  RTL8127A") in mainline **6.16**; `ae1737e7339b` ("r8169: fix RTL8127 hang on
+  suspend/shutdown", `Cc: stable`, `Fixes: f24f7b2f3af9`) in mainline **6.18**,
+  backported **6.17-stable**. NIC floor is therefore 6.17; 6.18 is justified by the iGPU.
+  Updated in the header hard-floors line, §1, §11.
+- **linux-firmware advisory semantics** — `20260110` is a **revert**, not a new fix.
+  `20251125` shipped the regressed GC 11.5.1 microcode (gfx1151 MES → 0x83, commit
+  `9643cbf2…`); `20260110` reverted to stable MES 0x80 (`c092c7487e…`). Known-good:
+  20251111 (0x80) or 20260110+. The stale "MES 0x86" label is removed (relevant versions
+  are 0x83 bad / 0x80 good). Latest release 20260624. Updated in header, §1, §11,
+  appendix §E/§F, VERIFY block.
+- **MangoHud sensor key** — corrected `cpu_custom_temp_sensor` → **`cpu_temp_sensor`**
+  (MangoHud #1825) across all five sites (What-changed item 4, §12, appendix §B, §F,
+  VERIFY block). Added the open caveat that enabling `cpu_temp` zeroes `cpu_power` on
+  Zen 5 (#1794). `k10temp`/Tctl confirmed the correct Zen 5 source.
+
+#### Resolved (open questions answered, no text was wrong — just under-determined)
+
+- **amd_iommu=off does NOT break ROCm** on gfx1151 (`rocminfo` reports `IOMMU Support:
+  None`; the Strix Halo LLM-toolbox community recommends `amd_iommu=off` for the unified
+  pool). Removed the compute-escalation gate in §3/§5/§10/§F — accepted security-vs-
+  latency trade-off, not a compute regression.
+- **§13 candidate knobs fully resolved** with CALL + evidence:
+  - KEEP-omitted: `mitigations=off` (Zen 5 not Inception-affected; no gaming benefit
+    measured), `amdgpu.ppfeaturemask` (GPU OC/undervolt unimplemented on gfx1151; real
+    lever is CPU ryzenadj), **`preempt=full` (redundant — CachyOS desktop default is
+    already `full`)**, `nvme_core.io_timeout`/`pcie_port_pm`, `RADV_PERFTEST` gpl/sam
+    (gpl default since Mesa 23.1, sam auto-on for APU), `RADV_DEBUG`/present-mode/
+    `mesa_glthread`, DXVK GPL + numCompilerThreads (auto-optimal; async superseded),
+    `VKD3D_CONFIG`, `read_ahead_kb`/`nr_requests` (defaults optimal), `vm.max_map_count`
+    (2147483642 sufficient), `isolcpus`/`nohz_full`/`rcu_nocbs`, **GameMode (redundant —
+    governor/EPP/DPM already pinned profile-wide)**.
+  - UNCERTAIN (no gfx1151/Zen-5 data exists — do not ADD on a guess): RADV `nggc`;
+    EPP `balance_performance`→`performance` gaming delta (§6).
+  - verify-only/auto: ReBAR/SAM auto-on for the APU (optional ReBAR-off INFO).
+- **amd_pstate EPP triple CONFIRMED** — active + powersave + balance_performance is the
+  documented EPP-honoring max-perf config on Zen 5; governor not flipped.
+- **MT7925 status** sharpened to "improving, not closed" (mt7925e fixes in 6.17+, already
+  under the 6.18 floor; drop-in stays defensive).
+- **ACP70 internal-mic gap CONFIRMED still open** upstream (no machine driver / UCM
+  profile as of mid-2026) — documented as a known hardware gap, not a recommendable floor.
+
+#### Still open after Round 2 (marked UNCERTAIN in the prompt)
+
+- Exact linux-firmware release re-landing the corrected GC 11.5.1 MES blob
+  (`a0f0e52138…`) — soft-warn kept pinned to 20251125.
+- sdboot-manage upstream maintenance cadence.
+- Verbatim author/AuthorDate for the three firmware commit hashes (git.kernel.org /
+  gitlab blocked automated fetch; hashes secondary-corroborated via Launchpad #2129150,
+  Debian firmware-nonfree changelog, ROCm #5724).
+
+
 
 - **§13 Candidate enhancements** — a new investigation section auditing knobs the
   profile does NOT set, each as an ADD-default / ADD-opt-in / KEEP-omitted decision with
@@ -76,7 +137,8 @@ generic items.
   `PROTON_NO_NTSYNC=1` opt-out documented; the "largest unmanaged surface" framing
   retired.
 - §12 / §B9: MangoHud `cpu_temp` documented as commented out (re-enable via
-  `cpu_custom_temp_sensor=k10temp`).
+  `cpu_temp_sensor=k10temp`; key corrected from `cpu_custom_temp_sensor` in the Round 2
+  pass).
 - §1 / §11: linux-firmware preflight advisory added (`20251125*` hard-warn,
   `< 20260110` soft-warn).
 - §9 / §A: RTC write-back (`_ry_rtc_writeback`) added to the Services phase.
